@@ -4,9 +4,10 @@ Windows 10 屏幕截图翻译工具，基于 Qwen3-VL-Plus 视觉大模型。
 
 ## 安装
 
-1. 下载 `ScreenTrans.exe` 和 `install.ps1` 到同一目录
-2. 双击 `install.bat`（自动请求管理员权限）
+1. 下载 `ScreenTrans_Setup.exe`
+2. 双击运行，按照安装向导完成安装
 3. 安装完成后，开始菜单和桌面均有快捷方式
+4. 通过 Windows "设置 > 应用" 即可卸载
 
 或从源码运行：
 
@@ -43,9 +44,8 @@ python main.py
 ```bash
 pip install pyinstaller
 pyinstaller --onefile --windowed --name ScreenTrans --icon=icon.ico main.py
+# 生成 dist/ScreenTrans.exe 后，用 Inno Setup 编译 setup.iss 生成安装包
 ```
-
-产出 `dist/ScreenTrans.exe`，配合 `install.ps1` 完成安装。
 
 ## 设计文档
 
