@@ -625,6 +625,42 @@ def create_tray_icon(on_exit, on_show):
         return None
 
 # ============================================================
+# 开机自启（注册表）
+# ============================================================
+import winreg
+
+AUTOSTART_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
+AUTOSTART_NAME = "ScreenTrans"
+
+
+def get_autostart_state() -> bool:
+    try:
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, AUTOSTART_KEY, 0, winreg.KEY_READ)
+        winreg.QueryValueEx(key, AUTOSTART_NAME)
+        winreg.CloseKey(key)
+        return True
+    except FileNotFoundError:
+        return False
+    except Exception:
+        return False
+
+
+def set_autostart_state(enabled: bool, exe_path: str):
+    try:
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, AUTOSTART_KEY, 0, winreg.KEY_SET_VALUE)
+        if enabled:
+            winreg.SetValueEx(key, AUTOSTART_NAME, 0, winreg.REG_SZ, exe_path)
+        else:
+            try:
+                winreg.DeleteValue(key, AUTOSTART_NAME)
+            except FileNotFoundError:
+                pass
+        winreg.CloseKey(key)
+    except Exception as e:
+        print(f"[Autostart] 设置失败: {e}")
+
+
+# ============================================================
 # 设置窗口
 # ============================================================
 class SettingsWindow:
@@ -732,6 +768,21 @@ class SettingsWindow:
         prompt_text.pack(fill=tk.BOTH, expand=True)
         self._entries["system_prompt"] = prompt_text
 
+        # ---- 开机自启 ----
+        self._autostart_var = tk.BooleanVar(value=False)
+        autostart_cb = tk.Checkbutton(
+            content, text="开机自启（随 Windows 启动）",
+            variable=self._autostart_var,
+            fg="#AAAAAA", bg="#2D2D30",
+            selectcolor="#2D2D30",
+            activebackground="#2D2D30",
+            activeforeground="#E8E8E8",
+            font=("Microsoft YaHei UI", 10),
+            relief=tk.FLAT,
+            cursor="hand2",
+        )
+        autostart_cb.pack(fill=tk.X, pady=(14, 0))
+
         # ---- 按钮区 ----
         btn_frame = tk.Frame(self.root, bg="#252526", padx=16, pady=10)
         btn_frame.pack(fill=tk.X, side=tk.BOTTOM)
@@ -777,6 +828,7 @@ class SettingsWindow:
             else:
                 widget.delete(0, tk.END)
                 widget.insert(0, str(val))
+        self._autostart_var.set(get_autostart_state())
 
     def _collect_values(self) -> dict:
         result = {}
@@ -801,6 +853,8 @@ class SettingsWindow:
         new_vals = self._collect_values()
         CONFIG.update(new_vals)
         save_config(CONFIG)
+        # 处理开机自启
+        set_autostart_state(self._autostart_var.get(), sys.executable)
         self.on_save()
         self.hide()
         ToastNotification("设置已保存", 2000, "#4CAF50")

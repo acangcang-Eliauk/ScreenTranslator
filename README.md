@@ -1,6 +1,19 @@
-# ScreenTranslator - 屏幕翻译工具
+# ScreenTrans - 屏幕翻译工具
 
 Windows 10 屏幕截图翻译工具，基于 Qwen3-VL-Plus 视觉大模型。
+
+## 安装
+
+1. 下载 `ScreenTrans.exe` 和 `install.ps1` 到同一目录
+2. 双击 `install.bat`（自动请求管理员权限）
+3. 安装完成后，开始菜单和桌面均有快捷方式
+
+或从源码运行：
+
+```bash
+pip install -r requirements.txt
+python main.py
+```
 
 ## 快捷键
 
@@ -14,32 +27,25 @@ Windows 10 屏幕截图翻译工具，基于 Qwen3-VL-Plus 视觉大模型。
 | `E` | 悬浮窗中向下滚动 |
 | `Esc` | 关闭悬浮窗/设置面板 |
 
-## 安装与运行
-
-```bash
-pip install -r requirements.txt
-python main.py
-```
-
-或双击 `run.bat`（自动请求管理员权限，游戏全屏下必需）。
-
 ## 设置
 
 `Ctrl+F8` 打开设置面板，可配置：
-- **API Key** — Qwen API 密钥
+- **API Key** — Qwen API 密钥（默认空，需自行填入）
 - **模型名称** — 默认为 `qwen3-vl-plus`
 - **API 地址** — DashScope API 端点
 - **系统提示词** — 指导模型输出格式的提示词
+- **开机自启** — 勾选后随 Windows 自动启动
 
-修改后点击"保存"，立即生效，无需重启。配置持久化至 `config.json`。
+修改后点击"保存"，立即生效，无需重启。
 
-## 依赖
+## 打包
 
-- Python 3.10+
-- `mss` — 高速屏幕截图
-- `Pillow` — 图像处理
-- `requests` — HTTP 请求
-- `pystray` — 系统托盘图标（可选）
+```bash
+pip install pyinstaller
+pyinstaller --onefile --windowed --name ScreenTrans --icon=icon.ico main.py
+```
+
+产出 `dist/ScreenTrans.exe`，配合 `install.ps1` 完成安装。
 
 ## 设计文档
 
