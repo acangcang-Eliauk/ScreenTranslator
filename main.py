@@ -851,13 +851,16 @@ class SettingsWindow:
         prompt_text.pack(fill=tk.BOTH, expand=True)
         self._entries["system_prompt"] = prompt_text
 
-        # ---- 开机自启（与其他设置项严格对齐） ----
-        tk.Label(content, text="开机自启", fg="#AAAAAA", bg="#2D2D30",
-                 font=("Microsoft YaHei UI", 10), anchor=tk.W,
-        ).pack(fill=tk.X, pady=(12, 2))
+        # ---- 开机自启 ----
+        row = tk.Frame(content, bg="#2D2D30")
+        row.pack(fill=tk.X, pady=(12, 2))
 
-        self._autostart_toggle = ToggleSwitch(content)
-        self._autostart_toggle.pack(anchor=tk.W)
+        tk.Label(row, text="开机自启", fg="#AAAAAA", bg="#2D2D30",
+                 font=("Microsoft YaHei UI", 10),
+        ).pack(side=tk.LEFT)
+
+        self._autostart_toggle = ToggleSwitch(row)
+        self._autostart_toggle.pack(side=tk.RIGHT)
 
         # 版本信息
         tk.Label(content, text="ScreenTrans V1.0\nManGo_Mouse 制作", fg="#666666",
