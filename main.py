@@ -663,6 +663,54 @@ def set_autostart_state(enabled: bool, exe_path: str):
 # ============================================================
 # 设置窗口
 # ============================================================
+class ToggleSwitch(tk.Canvas):
+    """药丸形拨动开关"""
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, width=46, height=24, bg="#2D2D30",
+                        highlightthickness=0, cursor="hand2", **kwargs)
+        self._on = False
+        self._var = None
+        self._command = None
+        self.bind("<Button-1>", self._toggle)
+        self._render()
+
+    def _render(self):
+        self.delete("all")
+        h, w = 22, 44
+        r = h // 2
+        y0, y1 = 1, 1 + h
+
+        if self._on:
+            track_color = "#0078D4"
+            knob_x = w - h + 3
+        else:
+            track_color = "#666666"
+            knob_x = 2
+
+        self.create_oval(0, y0, h, y1, fill=track_color, outline="")
+        self.create_oval(w - h, y0, w, y1, fill=track_color, outline="")
+        self.create_rectangle(r, y0, w - r, y1, fill=track_color, outline="")
+        self.create_oval(knob_x, y0 + 2, knob_x + h - 4, y1 - 2, fill="#FFFFFF", outline="")
+
+    def _toggle(self, event=None):
+        self._on = not self._on
+        self._render()
+        if self._var is not None:
+            self._var.set(self._on)
+        if self._command:
+            self._command()
+
+    def get(self):
+        return self._on
+
+    def set(self, value):
+        self._on = bool(value)
+        self._render()
+
+    def config_command(self, command):
+        self._command = command
+
+
 class SettingsWindow:
     """Ctrl+F8 打开的设置面板 — 与翻译悬浮窗一致风格"""
 
@@ -768,20 +816,23 @@ class SettingsWindow:
         prompt_text.pack(fill=tk.BOTH, expand=True)
         self._entries["system_prompt"] = prompt_text
 
-        # ---- 开机自启 ----
-        self._autostart_var = tk.BooleanVar(value=False)
-        autostart_cb = tk.Checkbutton(
-            content, text="开机自启（随 Windows 启动）",
-            variable=self._autostart_var,
-            fg="#AAAAAA", bg="#2D2D30",
-            selectcolor="#2D2D30",
-            activebackground="#2D2D30",
-            activeforeground="#E8E8E8",
-            font=("Microsoft YaHei UI", 10),
-            relief=tk.FLAT,
-            cursor="hand2",
-        )
-        autostart_cb.pack(fill=tk.X, pady=(14, 0))
+        # ---- 开机自启（Toggle Switch） ----
+        autostart_row = tk.Frame(content, bg="#2D2D30")
+        autostart_row.pack(fill=tk.X, pady=(14, 0))
+
+        tk.Label(autostart_row, text="开机自启", fg="#E8E8E8", bg="#2D2D30",
+                 font=("Microsoft YaHei UI", 10)).pack(side=tk.LEFT)
+
+        self._autostart_toggle = ToggleSwitch(autostart_row)
+        self._autostart_toggle.pack(side=tk.RIGHT)
+
+        # 版本信息
+        tk.Label(content, text="ScreenTrans V1.0", fg="#666666", bg="#2D2D30",
+                 font=("Microsoft YaHei UI", 8), anchor=tk.CENTER,
+        ).pack(side=tk.BOTTOM, pady=(18, 0))
+        tk.Label(content, text="ManGo_Mouse 制作", fg="#666666", bg="#2D2D30",
+                 font=("Microsoft YaHei UI", 8), anchor=tk.CENTER,
+        ).pack(side=tk.BOTTOM, pady=(2, 4))
 
         # ---- 按钮区 ----
         btn_frame = tk.Frame(self.root, bg="#252526", padx=16, pady=10)
@@ -828,7 +879,7 @@ class SettingsWindow:
             else:
                 widget.delete(0, tk.END)
                 widget.insert(0, str(val))
-        self._autostart_var.set(get_autostart_state())
+        self._autostart_toggle.set(get_autostart_state())
 
     def _collect_values(self) -> dict:
         result = {}
@@ -854,7 +905,7 @@ class SettingsWindow:
         CONFIG.update(new_vals)
         save_config(CONFIG)
         # 处理开机自启
-        set_autostart_state(self._autostart_var.get(), sys.executable)
+        set_autostart_state(self._autostart_toggle.get(), sys.executable)
         self.on_save()
         self.hide()
         ToastNotification("设置已保存", 2000, "#4CAF50")
