@@ -862,15 +862,9 @@ class SettingsWindow:
         self._autostart_toggle.pack(side=tk.RIGHT)
 
         # 版本信息
-        version_frame = tk.Frame(content, bg="#2D2D30")
-        version_frame.pack(side=tk.BOTTOM, pady=(0, 2))
-
-        tk.Label(version_frame, text="ScreenTrans V1.0", fg="#666666", bg="#2D2D30",
-                 font=("Microsoft YaHei UI", 7),
-        ).pack()
-        tk.Label(version_frame, text="ManGo_Mouse 制作", fg="#666666", bg="#2D2D30",
-                 font=("Microsoft YaHei UI", 7),
-        ).pack()
+        tk.Label(content, text="ScreenTrans V1.0\nManGo_Mouse 制作", fg="#666666",
+                 bg="#2D2D30", font=("Microsoft YaHei UI", 7), justify=tk.CENTER,
+        ).pack(side=tk.BOTTOM, pady=(0, 4))
 
         # ---- 按钮区 ----
         btn_frame = tk.Frame(self.root, bg="#252526", padx=16, pady=10)
