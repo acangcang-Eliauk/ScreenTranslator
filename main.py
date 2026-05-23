@@ -16,7 +16,7 @@ from datetime import datetime
 
 import mss
 import requests
-from PIL import Image
+from PIL import Image, ImageDraw, ImageTk
 
 # ============================================================
 # 配置 — 持久化存储
@@ -674,40 +674,44 @@ def set_autostart_state(enabled: bool, exe_path: str):
 # ============================================================
 # 设置窗口
 # ============================================================
-class ToggleSwitch(tk.Canvas):
-    """药丸形拨动开关"""
+class ToggleSwitch(tk.Label):
+    """药丸形拨动开关 — PIL 抗锯齿渲染"""
+    _W, _H = 46, 24
+
     def __init__(self, parent, **kwargs):
-        super().__init__(parent, width=46, height=24, bg="#2D2D30",
-                        highlightthickness=0, cursor="hand2", **kwargs)
+        super().__init__(parent, width=self._W, height=self._H, bg="#2D2D30",
+                         cursor="hand2", **kwargs)
         self._on = False
-        self._var = None
         self._command = None
+        self._imgs = {}
+        self._render_images()
+        self.config(image=self._imgs[False])
         self.bind("<Button-1>", self._toggle)
-        self._render()
 
-    def _render(self):
-        self.delete("all")
-        h, w = 22, 44
-        r = h // 2
-        y0, y1 = 1, 1 + h
+    def _render_images(self):
+        for state in (False, True):
+            img = Image.new("RGBA", (self._W, self._H), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(img)
+            h, w = 22, 44
+            r = h // 2
+            y0 = 1
 
-        if self._on:
-            track_color = "#0078D4"
-            knob_x = w - h + 3
-        else:
-            track_color = "#666666"
-            knob_x = 2
+            track_color = "#0078D4" if state else "#666666"
 
-        self.create_oval(0, y0, h, y1, fill=track_color, outline="")
-        self.create_oval(w - h, y0, w, y1, fill=track_color, outline="")
-        self.create_rectangle(r, y0, w - r, y1, fill=track_color, outline="")
-        self.create_oval(knob_x, y0 + 2, knob_x + h - 4, y1 - 2, fill="#FFFFFF", outline="")
+            # 圆角轨道 — 用 pie+rect 组合
+            draw.pieslice([0, y0, h, y0 + h], 90, 270, fill=track_color)
+            draw.pieslice([w - h, y0, w, y0 + h], 270, 90, fill=track_color)
+            draw.rectangle([r, y0, w - r, y0 + h], fill=track_color)
+
+            # 白色滑块
+            knob_x = w - h + 3 if state else 2
+            draw.ellipse([knob_x, y0 + 2, knob_x + h - 4, y0 + h - 2], fill="#FFFFFF")
+
+            self._imgs[state] = ImageTk.PhotoImage(img)
 
     def _toggle(self, event=None):
         self._on = not self._on
-        self._render()
-        if self._var is not None:
-            self._var.set(self._on)
+        self.config(image=self._imgs[self._on])
         if self._command:
             self._command()
 
@@ -716,7 +720,7 @@ class ToggleSwitch(tk.Canvas):
 
     def set(self, value):
         self._on = bool(value)
-        self._render()
+        self.config(image=self._imgs[self._on])
 
     def config_command(self, command):
         self._command = command
