@@ -675,12 +675,13 @@ def set_autostart_state(enabled: bool, exe_path: str):
 # 设置窗口
 # ============================================================
 class ToggleSwitch(tk.Label):
-    """药丸形拨动开关 — PIL 抗锯齿渲染"""
+    """药丸形拨动开关 — 3x 超采样抗锯齿"""
     _W, _H = 46, 24
+    _SCALE = 3
 
     def __init__(self, parent, **kwargs):
-        super().__init__(parent, width=self._W, height=self._H, bg="#2D2D30",
-                         cursor="hand2", **kwargs)
+        super().__init__(parent, bg="#2D2D30", cursor="hand2",
+                         borderwidth=0, highlightthickness=0, **kwargs)
         self._on = False
         self._command = None
         self._imgs = {}
@@ -689,24 +690,43 @@ class ToggleSwitch(tk.Label):
         self.bind("<Button-1>", self._toggle)
 
     def _render_images(self):
+        s = self._SCALE
+        sw, sh = self._W * s, self._H * s
+        track_h = 20 * s
+        track_w = 40 * s
+        track_r = track_h // 2
+        pad_x = (sw - track_w) // 2
+        pad_y = (sh - track_h) // 2
+
         for state in (False, True):
-            img = Image.new("RGBA", (self._W, self._H), (0, 0, 0, 0))
+            img = Image.new("RGBA", (sw, sh), (0, 0, 0, 0))
             draw = ImageDraw.Draw(img)
-            h, w = 22, 44
-            r = h // 2
-            y0 = 1
 
-            track_color = "#0078D4" if state else "#666666"
+            y0 = pad_y
+            y1 = pad_y + track_h
+            x0 = pad_x
+            x1 = pad_x + track_w
 
-            # 圆角轨道 — 用 pie+rect 组合
-            draw.pieslice([0, y0, h, y0 + h], 90, 270, fill=track_color)
-            draw.pieslice([w - h, y0, w, y0 + h], 270, 90, fill=track_color)
-            draw.rectangle([r, y0, w - r, y0 + h], fill=track_color)
+            track_color = (0, 120, 212, 255) if state else (100, 100, 100, 255)
+
+            # 圆角轨道
+            draw.pieslice([x0, y0, x0 + track_h, y1], 90, 270, fill=track_color)
+            draw.pieslice([x1 - track_h, y0, x1, y1], 270, 90, fill=track_color)
+            draw.rectangle([x0 + track_r, y0, x1 - track_r, y1], fill=track_color)
 
             # 白色滑块
-            knob_x = w - h + 3 if state else 2
-            draw.ellipse([knob_x, y0 + 2, knob_x + h - 4, y0 + h - 2], fill="#FFFFFF")
+            knob_margin = 2 * s
+            knob_d = track_h - knob_margin * 2
+            if state:
+                knob_x = x1 - track_h + knob_margin + 3 * s
+            else:
+                knob_x = x0 + knob_margin
+            knob_y = y0 + knob_margin
+            draw.ellipse([knob_x, knob_y, knob_x + knob_d, knob_y + knob_d],
+                        fill=(255, 255, 255, 255))
 
+            # 降采样
+            img = img.resize((self._W, self._H), Image.LANCZOS)
             self._imgs[state] = ImageTk.PhotoImage(img)
 
     def _toggle(self, event=None):
