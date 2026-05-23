@@ -447,7 +447,7 @@ class OverlayWindow:
         close_btn.bind("<Button-1>", lambda e: self.hide())
 
         title_lbl = tk.Label(
-            self.title_bar, text="  屏幕翻译 · Screen Translator",
+            self.title_bar, text="  ScreenTrans",
             fg="#AAAAAA", bg="#1E1E1E", font=("Microsoft YaHei UI", 9),
         )
         title_lbl.pack(side=tk.LEFT)
@@ -596,17 +596,28 @@ class OverlayWindow:
 # ============================================================
 # 系统托盘
 # ============================================================
+def _get_app_dir():
+    """获取应用所在目录（兼容 PyInstaller 打包）"""
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+
 def create_tray_icon(on_exit, on_show):
     """创建系统托盘图标"""
     try:
         import pystray
 
-        # 生成简单图标 (16x16 蓝色方形)
-        icon_img = Image.new("RGB", (32, 32), "#0078D4")
-        # 画一个简单的 "T" 字
-        from PIL import ImageDraw
-        draw = ImageDraw.Draw(icon_img)
-        draw.text((8, 6), "T", fill="#FFFFFF")
+        # 加载应用图标
+        icon_path = os.path.join(_get_app_dir(), "icon.ico")
+        try:
+            icon_img = Image.open(icon_path)
+            icon_img = icon_img.resize((32, 32), Image.LANCZOS)
+        except Exception:
+            icon_img = Image.new("RGB", (32, 32), "#0078D4")
+            from PIL import ImageDraw
+            draw = ImageDraw.Draw(icon_img)
+            draw.text((8, 6), "译", fill="#FFFFFF")
 
         menu = pystray.Menu(
             pystray.MenuItem("显示/隐藏翻译窗口", lambda: on_show()),
@@ -615,9 +626,9 @@ def create_tray_icon(on_exit, on_show):
         )
 
         tray = pystray.Icon(
-            "ScreenTranslator",
+            "ScreenTrans",
             icon_img,
-            "屏幕翻译工具",
+            "ScreenTrans",
             menu,
         )
         return tray
@@ -941,7 +952,7 @@ class App:
         # 初始化 tkinter root（隐藏）
         self.tk_root = tk.Tk()
         self.tk_root.withdraw()
-        self.tk_root.title("ScreenTranslator")
+        self.tk_root.title("ScreenTrans")
 
         # 轮询式热键管理器（GetAsyncKeyState，全屏游戏可用）
         self._hotkeys = PollingHotkeyManager(self.tk_root)
@@ -966,7 +977,7 @@ class App:
         self._hotkeys.register(VK_Q, 0, self.on_scroll_up, "Q")
         self._hotkeys.register(VK_E, 0, self.on_scroll_down, "E")
 
-        print("[ScreenTranslator] 启动完成")
+        print("[ScreenTrans] 启动完成")
         print(f"  F9 = 截图翻译 | F8 = 显示/隐藏翻译窗口 | F7 = 取消翻译 | Ctrl+F8 = 设置 | Q/E = 滚动")
         print(f"  模型: {CONFIG['model']}")
 
@@ -1094,7 +1105,7 @@ class App:
 
     def shutdown(self):
         """清理并退出"""
-        print("[ScreenTranslator] 正在退出...")
+        print("[ScreenTrans] 正在退出...")
         self._hotkeys.stop()
         if self.tray:
             self.tray.stop()
@@ -1113,9 +1124,15 @@ class App:
 # 入口
 # ============================================================
 def main():
+    # 单实例检查
+    mutex_name = "Local\\ScreenTrans_SingleInstance"
+    ctypes.windll.kernel32.CreateMutexW(None, False, mutex_name)
+    if ctypes.windll.kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
+        ctypes.windll.user32.MessageBoxW(0, "ScreenTrans 已在运行中。", "ScreenTrans", 0x40)
+        return
+
     # 隐藏控制台 (仅打包后生效)
     try:
-        import ctypes
         ctypes.windll.user32.ShowWindow(
             ctypes.windll.kernel32.GetConsoleWindow(), 0
         )

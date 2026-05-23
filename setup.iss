@@ -1,6 +1,6 @@
 ; ScreenTrans 安装脚本 - Inno Setup
 #define MyAppName "ScreenTrans"
-#define MyAppNameCN "ScreenTrans 屏幕翻译工具"
+#define MyAppNameCN "ScreenTrans"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "ScreenTranslator"
 #define MyAppURL "https://github.com/acangcang-Eliauk/ScreenTranslator"
@@ -23,7 +23,7 @@ SetupIconFile=icon.ico
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
-UninstallDisplayName={#MyAppNameCN}
+UninstallDisplayName={#MyAppName}
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Languages]
