@@ -838,12 +838,15 @@ class SettingsWindow:
         self._autostart_toggle.pack(side=tk.RIGHT)
 
         # 版本信息
-        tk.Label(content, text="ScreenTrans V1.0", fg="#666666", bg="#2D2D30",
-                 font=("Microsoft YaHei UI", 8), anchor=tk.CENTER,
-        ).pack(side=tk.BOTTOM, pady=(18, 0))
-        tk.Label(content, text="ManGo_Mouse 制作", fg="#666666", bg="#2D2D30",
-                 font=("Microsoft YaHei UI", 8), anchor=tk.CENTER,
-        ).pack(side=tk.BOTTOM, pady=(2, 4))
+        version_frame = tk.Frame(content, bg="#2D2D30")
+        version_frame.pack(side=tk.BOTTOM, pady=(0, 2))
+
+        tk.Label(version_frame, text="ScreenTrans V1.0", fg="#666666", bg="#2D2D30",
+                 font=("Microsoft YaHei UI", 7),
+        ).pack()
+        tk.Label(version_frame, text="ManGo_Mouse 制作", fg="#666666", bg="#2D2D30",
+                 font=("Microsoft YaHei UI", 7),
+        ).pack()
 
         # ---- 按钮区 ----
         btn_frame = tk.Frame(self.root, bg="#252526", padx=16, pady=10)
@@ -852,7 +855,7 @@ class SettingsWindow:
         restore_btn = tk.Label(
             btn_frame, text="  恢复默认  ", fg="#CCCCCC", bg="#3E3E42",
             font=("Microsoft YaHei UI", 10), cursor="hand2",
-            padx=14, pady=5,
+            padx=14, pady=8,
         )
         restore_btn.pack(side=tk.LEFT)
         restore_btn.bind("<Button-1>", lambda e: self._restore_defaults())
@@ -862,7 +865,7 @@ class SettingsWindow:
         save_btn = tk.Label(
             btn_frame, text="  保存  ", fg="#FFFFFF", bg="#0078D4",
             font=("Microsoft YaHei UI", 10, "bold"), cursor="hand2",
-            padx=22, pady=5,
+            padx=22, pady=8,
         )
         save_btn.pack(side=tk.RIGHT)
         save_btn.bind("<Button-1>", lambda e: self._save())
