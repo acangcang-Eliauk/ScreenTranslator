@@ -19,9 +19,17 @@ import requests
 from PIL import Image, ImageDraw, ImageTk
 
 # ============================================================
+# 应用目录（兼容 PyInstaller 打包）
+# ============================================================
+if getattr(sys, 'frozen', False):
+    _APP_DIR = os.path.dirname(sys.executable)
+else:
+    _APP_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# ============================================================
 # 配置 — 持久化存储
 # ============================================================
-CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+CONFIG_FILE = os.path.join(_APP_DIR, "config.json")
 
 DEFAULTS = {
     "api_key": "",
@@ -481,6 +489,7 @@ class OverlayWindow:
             "按 F8 显示或隐藏此翻译窗口\n"
             "按 Ctrl+F8 显示或隐藏设置窗口\n"
             "按 Q / E 上下滚动翻译文本\n\n"
+            "按 F7 取消正在进行的翻译任务\n"
             "翻译结果将显示在这里...",
         )
 
@@ -598,9 +607,7 @@ class OverlayWindow:
 # ============================================================
 def _get_app_dir():
     """获取应用所在目录（兼容 PyInstaller 打包）"""
-    if getattr(sys, 'frozen', False):
-        return os.path.dirname(sys.executable)
-    return os.path.dirname(os.path.abspath(__file__))
+    return _APP_DIR
 
 
 def create_tray_icon(on_exit, on_show):
